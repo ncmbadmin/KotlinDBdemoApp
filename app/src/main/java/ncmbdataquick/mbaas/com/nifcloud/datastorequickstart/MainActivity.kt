@@ -24,8 +24,8 @@ class MainActivity : AppCompatActivity() {
         setContentView(R.layout.activity_main)
 
         //**************** APIキーの設定とSDKの初期化 **********************
-        NCMB.initialize(this, "3c99589bee9dda8184febdf64cdcfe65f84faf3ec5a2b158e477cea807299b30",
-                "4f77045784c3d667ccf2557cb31e507a1488e37bf0f88ba042610271f4e3f981")
+        NCMB.initialize(this, "APPKEY",
+                "CLIENTKEY")
     }
 
     override fun onCreateOptionsMenu(menu: Menu): Boolean {
