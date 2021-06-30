@@ -6,18 +6,26 @@ import android.support.v7.app.AppCompatActivity
 import android.view.Menu
 import android.view.MenuItem
 import android.view.View
+import android.util.Log
 import com.nifcloud.mbaas.core.NCMB
 import com.nifcloud.mbaas.core.NCMBException
 import com.nifcloud.mbaas.core.NCMBObject
+import com.nifcloud.mbaas.core.NCMBCallback
+import android.widget.Toast
+import android.content.Context
+import android.os.Handler
+import android.os.Looper
 
 class MainActivity : AppCompatActivity() {
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
+
         setContentView(R.layout.activity_main)
 
         //**************** APIキーの設定とSDKの初期化 **********************
-        NCMB.initialize(this, "YOUR_APPLICATION_KEY", "YOUR_CLIENT_KEY")
+        NCMB.initialize(this, "APPKEY",
+                "CLIENTKEY")
     }
 
     override fun onCreateOptionsMenu(menu: Menu): Boolean {
@@ -32,7 +40,6 @@ class MainActivity : AppCompatActivity() {
         // as you specify a parent activity in AndroidManifest.xml.
         val id = item.itemId
 
-
         return if (id == R.id.action_settings) {
             true
         } else super.onOptionsItemSelected(item)
@@ -41,30 +48,37 @@ class MainActivity : AppCompatActivity() {
 
     fun doStartDemo(view: View) {
         val obj = NCMBObject("TestClass")
+
         try {
             obj.put("message", "Hello, NCMB!")
-            obj.saveInBackground { e ->
+            val callback = NCMBCallback{ e, obj ->
                 if (e != null) {
                     //保存失敗
-                    AlertDialog.Builder(this@MainActivity)
-                            .setTitle("Notification from NIFCLOUD")
-                            .setMessage("Error:" + e.message)
-                            .setPositiveButton("OK", null)
-                            .show()
-
+                    Log.v("NCMB","NCMB Error:" + e.message)
+                    backgroundThreadShortToast(NCMB.getCurrentContext(), "NCMB Error:" + e.message);
                 } else {
                     //保存成功
-                    AlertDialog.Builder(this@MainActivity)
-                            .setTitle("Notification from NIFCLOUD")
-                            .setMessage("Save successfull! with ID:" + obj.objectId)
-                            .setPositiveButton("OK", null)
-                            .show()
-
+                    if(obj is NCMBObject) {
+                        Log.v("NCMB", "Save successfull! with ID:" + obj.getObjectId())
+                        backgroundThreadShortToast(NCMB.getCurrentContext(), "Save successfull! with ID:" + obj.getObjectId());
+                    }
                 }
             }
+            obj.saveInBackground(callback)
         } catch (e: NCMBException) {
             e.printStackTrace()
         }
 
+    }
+}
+
+// This method is to process UI on different thread to be called on callback for NCMB connection using okhttp
+fun backgroundThreadShortToast(context: Context?, msg: String?) {
+    if (context != null && msg != null) {
+        Handler(Looper.getMainLooper()).post(object : Runnable {
+            override fun run() {
+                Toast.makeText(context, msg, Toast.LENGTH_SHORT).show() //UI更新
+            }
+        })
     }
 }
